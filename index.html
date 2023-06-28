@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html lang='en'>
+    <head>
+        <title>Gazetteer</title>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+        <link rel='shortcut icon' type="image/x-icon" href="./images/icons8-globe-africa-16.png">
+        <link href='./css/bootstrap.min.css' rel='stylesheet'>
+        <!-- Leaflet -->
+        <link rel="stylesheet" href="node_modules/leaflet/dist/leaflet.css">
+        <!-- Leaflet marker cluster -->
+        <link rel="stylesheet" href="node_modules/leaflet.markercluster/dist/MarkerCluster.css">
+        <link rel="stylesheet" href="node_modules/leaflet.markercluster/dist/MarkerCluster.Default.css">
+        <!-- Leaflet extra markers -->
+        <link rel="stylesheet" href="css/leaflet.extra-markers.min.css">
+        <!-- Leaflet easy button -->
+        <link rel="stylesheet" href="node_modules/leaflet-easybutton/src/easy-button.css">
+        <!-- Fontawesome -->
+        <link rel="stylesheet" href="css/fontawesome-free-6.2.1-web/css/fontawesome.css">
+        <link rel="stylesheet" href="css/fontawesome-free-6.2.1-web/css/solid.css">
+        <link href='./css/styles.css' rel='stylesheet'>
+    </head>
+
+    <body>
+
+        <!-- Loader -->
+
+        <div id='preloader'>
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
+        <!-- Navbar -->
+
+        <div class='select-container d-inline-flex flex-shrink-1'>
+            <select id="country-list" class="form-select" aria-label="Default select example"></select>
+        </div>
+
+        <!-- Map -->
+
+        <div id='map'></div>
+
+        <!-- Currency -->
+
+        <div class='modal' tabindex="-1" id='currency-overlay'>
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><span id='country-name'></span> currency</h5>
+                        <button id='close-currency-overlay' type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <table class='table table-striped align-middle m-0'>
+                            <tr>
+                                <td>Name:</td>
+                                <td id='currency-name' class='right'></td>
+                            </tr>
+                            <tr>
+                                <td>Code:</td>
+                                <td class='currency-code right'></td>
+                            </tr>
+                            <tr>
+                                <td>Symbol:</td>
+                                <td id='currency-symbol' class='right'></td>
+                            </tr>
+                            <tr>
+                                <td>1 <span class='currency-code'></span> =</td>
+                                <td class='d-flex flex-row align-items-center'><span id='currency-rate' class='me-1'></span> <select id="currency-list" class="form-select" aria-label="Default select example"></select>
+                                </td>
+                            <tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info -->
+
+        <div class="modal" tabindex="-1" id='info-overlay'>
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><span id='country-name-info'></span> <span id='country-flag'></h5>
+                        <button id='close-info-overlay' type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-0">
+                        <table class='table table-striped m-0'>
+                            <tr>
+                                <td>Capital City:</td>
+                                <td id='capital-city' class='right'></td>
+                            </tr>
+                            <tr>
+                                <td>Area:</td>
+                                <td class='right'><span id='area'></span> km2</td>
+                            </tr>
+                            <tr>
+                                <td>Population:</td>
+                                <td id='population' class='right'></td>
+                            </tr>
+                            <tr>
+                                <td>Wikipedia:</td>
+                                <td id='wikipedia' class='right'></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Weather -->
+
+        <div class="modal" tabindex="-1" id='weather-card'>
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id='place'></h5>
+                        <button id='close-weather-overlay' type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id='date' class='text-center'></div>
+                        <div class='d-flex flex-row align-items-center justify-content-evenly mb-2'>
+                            <div id='icon'></div>
+                            <div class='fs-2'><span id='temp'></span>&#176; C</div>
+                        </div>
+                        <div class='d-flex flex-row justify-content-evenly mb-2 small'>
+                            <div class='me-1'>
+                                <i class="fa-solid fa-wind"></i>
+                                <span id='wind-speed'></span> km/h
+                            </div>
+                            <div class='me-1'>
+                                <i class="fa-solid fa-droplet ms-1"></i>
+                                <span id='humidity'></span> %
+                            </div>
+                            <div class='me-1'>
+                                <i class="fa-solid fa-gauge-high ms-1"></i>
+                                <span id='pressure'></span> hPa
+                            </div>
+                        </div>
+                        <div class="container text-center">
+                            <div class="row row-cols-4">
+                                <div id='day1' class="col">
+                                    <div id='weekday1'></div>
+                                    <div id='icon1'></div>
+                                    <div id='tmin1'></div>
+                                    <div id='tmax1'></div>
+                                </div>
+                                <div id='day2' class="col">
+                                    <div id='weekday2'></div>
+                                    <div id='icon2'></div>
+                                    <div id='tmin2'></div>
+                                    <div id='tmax2'></div>
+                                </div>
+                                <div id='day3' class="col">
+                                    <div id='weekday3'></div>
+                                    <div id='icon3'></div>
+                                    <div id='tmin3'></div>
+                                    <div id='tmax3'></div>
+                                </div>
+                                <div id='day4' class="col">
+                                    <div id='weekday4'></div>
+                                    <div id='icon4'></div>
+                                    <div id='tmin4'></div>
+                                    <div id='tmax4'></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- News -->
+
+        <div class="modal" tabindex="-1" id='news-overlay'>
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Headlines from <span id='country-name-news'></span></h5>
+                        <button id='close-news-overlay' type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div id='news' class="modal-body p-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Holidays -->
+
+        <div class="modal" tabindex="-1" id='holidays-overlay'>
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title"><span id='country-name-holidays'></span> holidays</h5>
+                        <button id='close-holidays-overlay' type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body medium p-0" id='holidays'>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src='./js/jquery-3.6.3.min.js'></script>
+        <script src='./js/bootstrap.bundle.min.js'></script>
+        <!-- Leaflet -->
+        <script src="node_modules/leaflet/dist/leaflet.js"></script>
+        <!-- leaflet marker cluster -->
+        <script src="node_modules/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+        <!-- leaflet extra markers -->
+        <script src="./js/leaflet.extra-markers.min.js"></script>
+        <!-- leaflet easy button -->
+        <script src="node_modules/leaflet-easybutton/src/easy-button.js"></script>
+        <!-- dayjs -->
+        <script src="node_modules/dayjs/dayjs.min.js"></script>
+        <script src="node_modules/dayjs/plugin/utc.js"></script>
+        <script src="node_modules/dayjs/plugin/timezone.js"></script>
+        <script src="node_modules/dayjs/plugin/advancedFormat.js"></script>
+        <script>
+            dayjs.extend(window.dayjs_plugin_utc);
+            dayjs.extend(window.dayjs_plugin_timezone);
+            dayjs.extend(window.dayjs_plugin_advancedFormat);
+        </script>
+        <script type='module' src='./js/main.js'></script>
+    </body>
+</html>

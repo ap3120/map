@@ -1,0 +1,65 @@
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.select-container {
+    position: fixed;
+    top: 10px;
+    z-index: 999;
+    border: 2px solid #999;
+    border-radius: 10px;
+    background-color: #fff;
+    max-width: 65vw;
+}
+
+#map {
+    height: 100vh;
+    width: 100vw;
+}
+
+.right {
+    text-align: end;
+}
+
+.small {
+    font-size: 12px;
+}
+
+.medium {
+    font-size: 13px;
+}
+
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    overflow: hidden;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.spinner-border {
+    width: 4rem;
+    height: 4rem;
+}
+
+.legend {
+    line-height: 18px;
+    background-color: #fff;
+    padding: 10px;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+

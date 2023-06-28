@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "dayjs": "^1.11.7",
+    "leaflet": "^1.9.3",
+    "leaflet-easybutton": "^2.4.0",
+    "leaflet.markercluster": "^1.5.3"
+  }
+}
