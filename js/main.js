@@ -349,11 +349,11 @@ const mediaCallback = (res) => {
         shape: 'circle',
         prefix: 'fa'
     });
-    for (let i=0; i<res.data.webcams.length; i++) {
-        var marker = L.marker(new L.LatLng(res.data.webcams[i].location.latitude, res.data.webcams[i].location.longitude), {icon: mediaMarker});
+    for (let i=0; i<res.data.length; i++) {
+        var marker = L.marker(new L.LatLng(res.data[i].location.latitude, res.data[i].location.longitude), {icon: mediaMarker});
         marker.bindPopup(
-            res.data.webcams[i].title
-            + `<br><br><iframe src=${res.data.webcams[i].player.day.embed}></iframe>`
+            res.data[i].title
+            + `<br><br><iframe src=${res.data[i].player.day}></iframe>`
         );
         marker.on('click', (e) => {
             var markerPopup = e.target.getPopup();
