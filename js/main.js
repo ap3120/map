@@ -21,7 +21,7 @@ const ajaxCall = (url, data, successCallback) => {
         data: data,
         success: res => successCallback(res, popup),
         error: (jqXHR, textStatus, errorThrown) => {
-            console.log(errorThrown);
+            console.log("Error executing request " + url + " : " + errorThrown);
         }
     });
 }

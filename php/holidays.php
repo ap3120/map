@@ -8,7 +8,7 @@ $key = $_ENV['HOLIDAYS_API'];
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-	CURLOPT_URL => "https://holidays-by-api-ninjas.p.rapidapi.com/v1/holidays?country=" . $_REQUEST['countryCode'] ."&year=2023",
+	CURLOPT_URL => "https://holidays-by-api-ninjas.p.rapidapi.com/v1/holidays?country=" . $_REQUEST['countryCode'],
 	CURLOPT_RETURNTRANSFER => true,
 	CURLOPT_FOLLOWLOCATION => true,
 	CURLOPT_ENCODING => "",
