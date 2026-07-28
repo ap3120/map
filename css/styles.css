@@ -50,6 +50,27 @@ body {
     height: 4rem;
 }
 
+#toast {
+    display: none;
+    position: fixed;
+    /* Clears the fixed country selector at the top of the page. */
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    max-width: 90vw;
+    padding: 10px 16px;
+    border-radius: 8px;
+    background-color: #b02a37;
+    color: #fff;
+    font-size: 14px;
+}
+
+.panel-error {
+    color: #b02a37;
+    font-size: 13px;
+}
+
 .legend {
     line-height: 18px;
     background-color: #fff;

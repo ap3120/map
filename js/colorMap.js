@@ -1,5 +1,13 @@
 import {getLegend} from './legends.js';
 
+const CHOROPLETH_STYLE = {
+    weight: 2,
+    opacity: 1,
+    color: 'white',
+    dashArray: '3',
+    fillOpacity: 0.7
+};
+
 export const getColor = (parameter, val) => {
     if (parameter === 'population') {
         return val > 1000000000 ? '#800026' :
@@ -22,37 +30,45 @@ export const getColor = (parameter, val) => {
     }
 }
 
+const getValue = (entry, parameter) => {
+    const population = parseFloat(entry.population);
+
+    if (parameter !== 'density') {
+        return population;
+    }
+
+    const area = parseFloat(entry.areaInSqKm);
+    return area > 0 ? population / area : null;
+}
+
 export const colorMap = (map, bordersLayer, popAndAreaObj, parameter) => {
     $('.legend').remove();
+
+    if (!Array.isArray(popAndAreaObj)) {
+        return;
+    }
+
+    const byIsoA3 = new Map(
+        popAndAreaObj
+            .filter(entry => entry?.isoAlpha3)
+            .map(entry => [entry.isoAlpha3, entry])
+    );
+
     bordersLayer.eachLayer(layer => {
-        let index = popAndAreaObj.findIndex(element => {
-            if (element.isoAlpha3 === layer.feature.properties.iso_a3) {
-                return true;
-            }
-        });
-        if (index >= 0) {
-            if (parameter === 'population') {
-                layer.setStyle({
-                    fillColor: getColor(parameter, popAndAreaObj[index].population),
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.7
-                });
-            } else if (parameter === 'density') {
-                layer.setStyle({
-                    fillColor: getColor(parameter, popAndAreaObj[index].population/popAndAreaObj[index].areaInSqKm),
-                    weight: 2,
-                    opacity: 1,
-                    color: 'white',
-                    dashArray: '3',
-                    fillOpacity: 0.7
-                });
-            }
+        const entry = byIsoA3.get(layer.feature?.properties?.iso_a3);
+        if (!entry) {
+            return;
         }
+
+        const value = getValue(entry, parameter);
+        if (!Number.isFinite(value)) {
+            return;
+        }
+
+        layer.setStyle({...CHOROPLETH_STYLE, fillColor: getColor(parameter, value)});
     });
+
     var legend = L.control({position: 'bottomright'});
-    legend.onAdd = () => getLegend(map, parameter);
+    legend.onAdd = () => getLegend(parameter);
     legend.addTo(map);
 }

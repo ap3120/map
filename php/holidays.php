@@ -1,36 +1,18 @@
 <?php
+declare(strict_types=1);
 
-require '../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable('../');
-$dotenv->load();
-$key = $_ENV['HOLIDAYS_API'];
+require __DIR__ . '/lib/bootstrap.php';
 
-$curl = curl_init();
+$countryCode = param('countryCode', PATTERN_COUNTRY_CODE);
 
-curl_setopt_array($curl, [
-	CURLOPT_URL => "https://holidays-by-api-ninjas.p.rapidapi.com/v1/holidays?country=" . $_REQUEST['countryCode'],
-	CURLOPT_RETURNTRANSFER => true,
-	CURLOPT_FOLLOWLOCATION => true,
-	CURLOPT_ENCODING => "",
-	CURLOPT_MAXREDIRS => 10,
-	CURLOPT_TIMEOUT => 30,
-	CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-	CURLOPT_CUSTOMREQUEST => "GET",
-	CURLOPT_HTTPHEADER => [
-		"X-RapidAPI-Host: holidays-by-api-ninjas.p.rapidapi.com",
-		"X-RapidAPI-Key: {$key}"
-	],
-]);
+$result = api_get(
+    'https://holidays-by-api-ninjas.p.rapidapi.com/v1/holidays'
+    . '?country=' . urlencode((string) $countryCode),
+    [
+        'X-RapidAPI-Host: holidays-by-api-ninjas.p.rapidapi.com',
+        'X-RapidAPI-Key: ' . env_key('HOLIDAYS_API'),
+    ]
+);
 
-$response = curl_exec($curl);
-$err = curl_error($curl);
-
-curl_close($curl);
-
-if ($err) {
-	echo "cURL Error #:" . $err;
-} else {
-	echo $response;
-}
-
-?>
+// Upstream returns a bare array; wrapping it keeps every endpoint on one contract.
+respond_upstream($result);

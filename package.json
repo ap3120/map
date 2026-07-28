@@ -1,4 +1,7 @@
 {
+  "name": "map",
+  "description": "Gazetteer: an interactive world map with country information, weather, news, holidays and exchange rates.",
+  "private": true,
   "dependencies": {
     "dayjs": "^1.11.7",
     "leaflet": "^1.9.3",

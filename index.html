@@ -4,7 +4,7 @@
     <head>
         <title>Gazetteer</title>
         <meta charset='utf-8'>
-        <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
         <link rel='shortcut icon' type="image/x-icon" href="./images/icons8-globe-africa-16.png">
         <link href='./css/bootstrap.min.css' rel='stylesheet'>
         <!-- Leaflet -->
@@ -31,6 +31,10 @@
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
+
+        <!-- Failures with no panel to report into -->
+
+        <div id='toast' role='status' aria-live='polite'></div>
 
         <!-- Navbar -->
 
@@ -82,7 +86,7 @@
             <div class="modal-dialog modal-sm">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title"><span id='country-name-info'></span> <span id='country-flag'></h5>
+                        <h5 class="modal-title"><span id='country-name-info'></span> <span id='country-flag'></span></h5>
                         <button id='close-info-overlay' type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body p-0">

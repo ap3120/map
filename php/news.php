@@ -1,45 +1,26 @@
 <?php
-require '../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable('../');
-$dotenv->load();
-$key = $_ENV['NEWS_API'];
+declare(strict_types=1);
 
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
+require __DIR__ . '/lib/bootstrap.php';
 
-$executionStartTime = microtime(true);
+const NEWS_LIMIT = 4;
 
-//$url='http://newsapi.org/v2/top-headlines?country=' . $_REQUEST['countryCode'] . '&pageSize=5&page=1&apiKey=' . $key;
-$url='https://newsdata.io/api/1/news?apikey=' . $key . '&country=' . $_REQUEST['countryCode'];
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_URL,$url);
+$countryCode = param('countryCode', PATTERN_COUNTRY_CODE);
 
-$result=curl_exec($ch);
+$result = api_get(
+    'https://newsdata.io/api/1/news'
+    . '?apikey=' . urlencode(env_key('NEWS_API'))
+    . '&country=' . urlencode((string) $countryCode)
+);
 
-curl_close($ch);
+$decoded = upstream_json($result);
 
-$decode = json_decode($result,true);	
-
-$output['status']['code'] = "200";
-$output['status']['name'] = "ok";
-$output['status']['description'] = "success";
-$output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-
-if ($decode['status'] === 'success') {
-    if (count($decode['results']) > 4) {
-        $res = array_slice($decode['results'], 0, 4);
-        $output['data'] = $res;
-    } else {
-        $output['data'] = $decode['results'];
-    }
-} else {
-    $output['data'] = $decode['results'];
+// newsdata.io reports its own errors inside a 200 response.
+if (($decoded['status'] ?? null) !== 'success') {
+    error_log('newsdata.io returned status: ' . var_export($decoded['status'] ?? null, true));
+    fail('Upstream news service returned an error', 502);
 }
 
-header('Content-Type: application/json; charset=UTF-8');
+$results = $decoded['results'] ?? [];
 
-echo json_encode($output); 
-
-?>
+respond(is_array($results) ? array_slice($results, 0, NEWS_LIMIT) : []);

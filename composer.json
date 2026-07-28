@@ -1,4 +1,6 @@
 {
+    "description": "Gazetteer: server-side API proxies for the interactive world map.",
+    "type": "project",
     "require": {
         "vlucas/phpdotenv": "^5.5"
     }

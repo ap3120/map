@@ -1,42 +1,32 @@
 <?php
-    require '../vendor/autoload.php';
-    $dotenv = Dotenv\Dotenv::createImmutable('../');
-    $dotenv->load();
-    $app_id = $_ENV['OPEN_EXCHANGE_RATE_API'];
-    
-    ini_set('display_errors', 'On');
-    error_reporting(E_ALL);
+declare(strict_types=1);
 
-    $executionStartTime = microtime(true);
+require __DIR__ . '/lib/bootstrap.php';
 
-    //$url='https://openexchangerates.org/api/latest.json?app_id=' . $app_id . '&symbols=' . $_REQUEST['symbols'];
-    $url='https://openexchangerates.org/api/latest.json?app_id=' . $app_id;
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_URL,$url);
+$symbols = strtoupper((string) param('symbols', PATTERN_CURRENCY_CODE));
 
-    $result=curl_exec($ch);
+$result = api_get(
+    'https://openexchangerates.org/api/latest.json'
+    . '?app_id=' . urlencode(env_key('OPEN_EXCHANGE_RATE_API'))
+);
 
-    curl_close($ch);
+$decoded = upstream_json($result);
+$rates   = $decoded['rates'] ?? null;
 
-    $decode = json_decode($result,true);	
+if (!is_array($rates)) {
+    error_log('Exchange rate payload is missing the rates object');
+    fail('Upstream returned an unexpected payload', 502);
+}
 
-    $output['status']['code'] = "200";
-    $output['status']['name'] = "ok";
-    $output['status']['description'] = "success";
-    $output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-    //$output['data'] = $decode['rates'];
-    $ratesArr = $decode['rates'];
-    $currencyRate = $ratesArr[$_REQUEST['symbols']];
-    foreach($ratesArr as $code => &$rate) {
-        $rate = $rate/$currencyRate;
-    }
+// Upstream quotes everything against USD; rebase onto the requested currency.
+$base = $rates[$symbols] ?? null;
 
-    $output['data'] = $ratesArr;
+if (!is_numeric($base) || (float) $base === 0.0) {
+    fail("No exchange rate is available for '{$symbols}'", 400);
+}
 
-    header('Content-Type: application/json; charset=UTF-8');
+foreach ($rates as $code => $rate) {
+    $rates[$code] = is_numeric($rate) ? $rate / $base : null;
+}
 
-    echo json_encode($output); 
-
-?>
+respond($rates);

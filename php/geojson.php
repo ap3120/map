@@ -1,59 +1,53 @@
 <?php
-require '../vendor/autoload.php';
-$dotenv = Dotenv\Dotenv::createImmutable('../');
-$dotenv->load();
-$path = $_ENV['PATH_TO_COUNTRY_BORDERS'];
+declare(strict_types=1);
 
-ini_set('display_errors', 'On');
-error_reporting(E_ALL);
+require __DIR__ . '/lib/bootstrap.php';
 
-$executionStartTime = microtime(true);
+// Read the border data straight off disk. It used to be fetched over HTTP from
+// PATH_TO_COUNTRY_BORDERS, which made the server issue a request to itself for
+// a 385 KB local file on every call.
+const BORDERS_FILE = __DIR__ . '/../countryBorders.geo.json';
 
-$url=$path;
+$query = param('q', '/^(ACN|ACG|SC)$/');
 
-$ch = curl_init();
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_URL,$url);
-
-$result=curl_exec($ch);
-
-curl_close($ch);
-
-$decode = json_decode($result,true);	
-
-$output['status']['code'] = "200";
-$output['status']['name'] = "ok";
-$output['status']['description'] = "success";
-$output['status']['returnedIn'] = intval((microtime(true) - $executionStartTime) * 1000) . " ms";
-
-$arr = array();
-
-if ($_REQUEST['q'] === 'ACN') { # All countries names
-
-  for ($i=0; $i<count($decode['features']); $i+=1) {
-    $arr[] = array(
-      'iso_a2'=>$decode['features'][$i]['properties']['iso_a2'],
-      'name'=>$decode['features'][$i]['properties']['name']
-    );
-  }
-
-} else if ($_REQUEST['q'] === 'ACG') { # All countries geometry
-  $arr = $decode['features']; 
-} else if ($_REQUEST['q'] === 'SC') { # Single country
-  $item = null;
-  foreach($decode['features'] as $struct) {
-    if ($_REQUEST['iso_a2'] == $struct['properties']['iso_a2']) {
-      $item = $struct;
-      break;
-    }
-  }
-  $arr[] = $struct;
+$raw = file_get_contents(BORDERS_FILE);
+if ($raw === false) {
+    error_log('Unable to read ' . BORDERS_FILE);
+    fail('Country border data is unavailable', 500);
 }
 
-$output['data'] = $arr;
-header('Content-Type: application/json; charset=UTF-8');
+$decoded = json_decode($raw, true);
+if (!is_array($decoded) || !isset($decoded['features']) || !is_array($decoded['features'])) {
+    error_log('Country border data is malformed');
+    fail('Country border data is unavailable', 500);
+}
 
-echo json_encode($output); 
+$features = $decoded['features'];
 
-?>
+switch ($query) {
+    case 'ACN': // All country names
+        $data = array_map(static fn(array $feature): array => [
+            'iso_a2' => $feature['properties']['iso_a2'] ?? null,
+            'name'   => $feature['properties']['name'] ?? null,
+        ], $features);
+        break;
+
+    case 'ACG': // All country geometries
+        $data = $features;
+        break;
+
+    case 'SC': // Single country
+        $iso_a2 = strtoupper((string) param('iso_a2', PATTERN_COUNTRY_CODE));
+        // Previously this pushed the loop variable instead of the match, so a
+        // lookup miss returned the last country in the file.
+        $data = array_values(array_filter(
+            $features,
+            static fn(array $feature): bool => ($feature['properties']['iso_a2'] ?? null) === $iso_a2
+        ));
+        break;
+
+    default:
+        fail("Invalid value for parameter 'q'", 400);
+}
+
+respond($data);
